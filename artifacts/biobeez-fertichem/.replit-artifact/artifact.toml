@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "BIOBEEZ FERTICHEM"
+description = "A premium international agritech website for BIOBEEZ FERTICHEM, showcasing crop nutrition products, sustainable farming expertise, field imagery, company story, and contact information."
+version = "1.0.0"
+id = "artifacts/biobeez-fertichem"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22865
+
+[services.development]
+run = "pnpm --filter @workspace/biobeez-fertichem run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/biobeez-fertichem", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/biobeez-fertichem/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22865"
+BASE_PATH = "/"
