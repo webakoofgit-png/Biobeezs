@@ -1,62 +1,129 @@
-import { type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import NotFound from '@/pages/not-found';
-import {
-  Route,
-  Switch,
-  useLocation,
-  Router as WouterRouter,
-} from 'wouter';
+import { Link, Route, Switch, useLocation } from 'wouter';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowUpRight, ChevronLeft, ChevronRight, Filter, Leaf, Mail, MapPin, Menu, Phone, Search, ShieldCheck, Sprout, X } from 'lucide-react';
+import { products, type Product } from '@/data/products';
 
 const queryClient = new QueryClient();
+const gallery = Array.from({ length: 27 }, (_, i) => `/images/gallery/photo-gallery-${['1751352123-6863833b6b8e2','1751352210-68638392ac156','1751352252-686383bc3dc91','1751352278-686383d64fd1d','1751353281-686387c168956','1751353298-686387d234801','1751353309-686387dd23d9a','1751353324-686387ec71b87','1751353336-686387f8dff3f','1751353368-68638818a005d','1751353377-6863882133b1b','1751353386-6863882a53326','1751353396-686388345d5db','1751353433-6863885967b2c','1751353442-68638862b5dbc','1751353452-6863886c703a4','1751353465-6863887913189','1751353500-6863889c28e79','1751353510-686388a652609','1751353542-686388c63a80e','1751353553-686388d1ca71e','1751353562-686388da6d9f3','1751353572-686388e4dd995','1751353581-686388edc6e3a','1751353590-686388f6ae84e','1751353629-6863891dc792e','1751353650-68638932e07da'][i]}.jpg`);
+
+function Meta({ title, description }: { title: string; description: string }) {
+  useEffect(() => {
+    document.title = `${title} — BIOBEEZ FERTICHEM`;
+    let tag = document.querySelector('meta[name="description"]');
+    if (!tag) { tag = document.createElement('meta'); tag.setAttribute('name', 'description'); document.head.appendChild(tag); }
+    tag.setAttribute('content', description);
+  }, [title, description]);
+  return null;
+}
+
+function Header() {
+  const [open, setOpen] = useState(false);
+  const [location] = useLocation();
+  const links = [['/', 'Home'], ['/products', 'Products'], ['/about', 'About'], ['/gallery', 'Gallery'], ['/contact', 'Contact']];
+  return <header className="sticky top-0 z-30 border-b border-[#dbe2d9]/80 bg-[#f7f5ed]/95 backdrop-blur-md">
+    <div className="container-wide flex h-[78px] items-center justify-between">
+      <Link href="/" data-testid="link-logo" className="flex items-center gap-3">
+        <img src="/images/brand/logo-1.svg" alt="BIOBEEZ FERTICHEM" className="h-11 w-auto max-w-[205px] object-contain" />
+      </Link>
+      <nav className="hidden items-center gap-8 md:flex" aria-label="Main navigation">
+        {links.map(([href, label]) => <Link key={href} href={href} data-testid={`link-nav-${label.toLowerCase()}`} className={`relative py-3 text-[11px] font-bold uppercase tracking-[.18em] transition-colors ${location === href ? 'text-[#1597c6]' : 'text-[#173f2c] hover:text-[#1597c6]'}`}>{label}{location === href && <span className="absolute inset-x-0 -bottom-[1px] h-0.5 bg-[#1597c6]" />}</Link>)}
+      </nav>
+      <Link href="/contact" data-testid="button-header-contact" className="hidden items-center gap-2 bg-[#173f2c] px-5 py-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#f7f5ed] transition hover:bg-[#1597c6] sm:flex">Talk to our team <ArrowUpRight size={14} /></Link>
+      <button aria-label="Open menu" data-testid="button-mobile-menu" className="p-2 text-[#173f2c] md:hidden" onClick={() => setOpen(true)}><Menu /></button>
+    </div>
+    <AnimatePresence>{open && <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 26 }} className="fixed inset-0 z-50 bg-[#173f2c] p-7 text-[#f7f5ed] md:hidden">
+      <div className="flex items-center justify-between"><img src="/images/brand/logo-1.svg" alt="BIOBEEZ FERTICHEM" className="h-10 w-auto brightness-0 invert" /><button aria-label="Close menu" data-testid="button-close-menu" onClick={() => setOpen(false)}><X /></button></div>
+      <nav className="mt-20 grid gap-7">{links.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)} data-testid={`link-mobile-${label.toLowerCase()}`} className="serif text-5xl">{label}<span className="text-[#6bc3e4]">.</span></Link>)}</nav>
+      <div className="absolute bottom-8 left-7 text-sm text-[#b9d0c0]">Pune, Maharashtra · India</div>
+    </motion.div>}</AnimatePresence>
+  </header>;
+}
+
+function Footer() {
+  return <footer className="bg-[#173f2c] text-[#f7f5ed]">
+    <div className="container-wide grid gap-12 py-16 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div><img src="/images/brand/logo-1.svg" alt="BIOBEEZ FERTICHEM" className="h-12 w-auto brightness-0 invert" /><p className="mt-6 max-w-sm text-sm leading-7 text-[#b9d0c0]">Crop science that respects the soil. Sustainable, precise nutrition for farms that are growing the future.</p></div>
+      <div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#71c9e8]">Explore</p><div className="mt-5 grid gap-3 text-sm text-[#f2f5eb]"><Link data-testid="footer-products" href="/products">Product catalogue</Link><Link data-testid="footer-about" href="/about">Our story</Link><Link data-testid="footer-gallery" href="/gallery">Field notes</Link><Link data-testid="footer-contact" href="/contact">Connect</Link></div></div>
+      <div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#71c9e8]">Pune / India</p><div className="mt-5 grid gap-3 text-sm text-[#b9d0c0]"><a data-testid="footer-phone" href="tel:+917620592109">+91 76205 92109</a><a data-testid="footer-email" href="mailto:biobeezfertichem7@gmail.com">biobeezfertichem7@gmail.com</a><p>Fursungi, Pune,<br />Maharashtra 412308</p></div></div>
+    </div><div className="border-t border-[#41614e]"><div className="container-wide flex flex-wrap justify-between gap-3 py-5 text-[10px] uppercase tracking-[.16em] text-[#91ad9b]"><span>© {new Date().getFullYear()} BIOBEEZ FERTICHEM</span><span>Better inputs. Better harvests.</span></div></div>
+  </footer>;
+}
+
+function Shell({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  return <div className="noise min-h-[100dvh] bg-[#f7f5ed]"><Header /><AnimatePresence mode="wait"><motion.main key={location} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .28 }}>{children}</motion.main></AnimatePresence><Footer /></div>;
+}
+
+function SectionIntro({ eyebrow, title, copy, dark = false }: { eyebrow: string; title: string; copy?: string; dark?: boolean }) {
+  return <div className={`grid gap-6 md:grid-cols-[.8fr_1.6fr] md:items-end ${dark ? 'text-[#f7f5ed]' : ''}`}><div className="mono flex items-center gap-3 text-[10px] font-medium uppercase tracking-[.2em] text-[#1597c6]"><span className="h-px w-9 bg-current" />{eyebrow}</div><div><h2 className="serif max-w-3xl text-4xl leading-[.98] tracking-[-.03em] sm:text-6xl">{title}</h2>{copy && <p className={`mt-5 max-w-xl text-sm leading-7 ${dark ? 'text-[#b9d0c0]' : 'text-[#5a6b60]'}`}>{copy}</p>}</div></div>;
+}
+
+function ProductCard({ product, index }: { product: Product; index: number }) {
+  return <article data-testid={`card-product-${index}`} className="group border border-[#d8e0d6] bg-[#fbfaf5] transition hover:-translate-y-1 hover:border-[#1597c6]">
+    <div className="image-shine relative flex h-[285px] items-center justify-center overflow-hidden bg-[#eef1e9] p-8"><span className="absolute left-4 top-4 mono text-[9px] text-[#809187]">0{index + 1}</span><img src={product.image} alt={product.name} className="h-full w-full object-contain transition duration-500 group-hover:scale-105" /></div>
+    <div className="p-5"><div className="flex items-start justify-between gap-3"><h3 className="max-w-[220px] text-lg font-bold leading-tight text-[#173f2c]">{product.name}</h3><ArrowUpRight size={17} className="shrink-0 text-[#1597c6] transition group-hover:translate-x-1 group-hover:-translate-y-1" /></div><p className="mt-3 text-xs leading-5 text-[#6c7a71]">{product.description}</p><div className="mono mt-5 text-[9px] uppercase tracking-[.15em] text-[#1597c6]">{product.family}</div></div>
+  </article>;
+}
 
 function Home() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Replit Agent is building...
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Your app will appear here once it's ready.
-        </p>
+  const [solution, setSolution] = useState('Farmers');
+  const [slide, setSlide] = useState(0);
+  const testimonials = [{ quote: 'The crop response is visible within the season. BIITAFERT gives us confidence to feed the crop accurately.', by: 'Progressive grower', place: 'Western Maharashtra' }, { quote: 'A dependable technical partner for our agronomy team and the growers we serve.', by: 'Distribution partner', place: 'Pune region' }];
+  return <><Meta title="Better Nutrition. Stronger Crops." description="BIOBEEZ FERTICHEM creates sustainable and precise crop nutrition for modern agriculture." />
+    <section className="hero-grid relative overflow-hidden border-b border-[#d8e0d6]">
+      <div className="container-wide relative min-h-[650px] pb-20 pt-16 md:min-h-[710px] md:pt-24">
+        <div className="max-w-4xl reveal"><p className="mono mb-7 flex items-center gap-3 text-[10px] uppercase tracking-[.24em] text-[#1597c6]"><span className="h-2 w-2 rounded-full bg-[#1597c6]" /> Pune · India · Crop nutrition</p><h1 className="serif max-w-4xl text-[clamp(3.3rem,8.7vw,8.4rem)] leading-[.88] tracking-[-.06em] text-[#173f2c]">Better Nutrition.<br /><em className="text-[#1597c6]">Stronger Crops.</em><br />Smarter Farming.</h1><p className="mt-8 max-w-md text-sm leading-7 text-[#52645a]">We make every input count — with innovative fertilizer solutions that nourish the soil and support healthier plant growth.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/products" data-testid="button-hero-products" className="inline-flex items-center gap-3 bg-[#173f2c] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] text-[#f7f5ed] transition hover:bg-[#1597c6]">Explore BIITAFERT <ArrowUpRight size={15} /></Link><Link href="/about" data-testid="button-hero-story" className="inline-flex items-center gap-2 border border-[#9cac9f] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] text-[#173f2c] transition hover:border-[#173f2c]">Why BIOBEEZ</Link></div></div>
+        <img src="/images/products/product-1749752982-684b1c96449bb.jpg" alt="BIITAFERT NPK 14-48-00+TE pack" className="float-a absolute -bottom-16 right-[10%] z-10 w-[155px] drop-shadow-[0_22px_20px_rgba(23,63,44,.25)] sm:right-[18%] sm:w-[205px] md:-bottom-24 md:right-[18%] md:w-[245px]" /><img src="/images/products/product-1749753002-684b1caa3a5da.jpg" alt="BIITAFERT NPK 10-54-10+TE pack" className="float-b absolute -bottom-12 right-0 z-0 w-[125px] drop-shadow-[0_22px_20px_rgba(23,63,44,.2)] sm:right-[7%] sm:w-[175px] md:-bottom-20 md:right-[4%] md:w-[220px]" />
+        <div className="absolute bottom-8 left-0 hidden md:block"><p className="mono text-[9px] uppercase tracking-[.18em] text-[#839289]">Scroll to cultivate</p><div className="mt-4 h-16 w-px bg-[#1597c6]" /></div>
       </div>
-    </div>
-  );
+    </section>
+    <div className="overflow-hidden border-b border-[#d8e0d6] bg-[#173f2c] py-4 text-[#f7f5ed]"><div className="marquee flex w-max gap-14 whitespace-nowrap"><span className="mono text-[10px] uppercase tracking-[.2em]">Soil-first science</span><span className="h-1.5 w-1.5 self-center rounded-full bg-[#6bc3e4]" /><span className="mono text-[10px] uppercase tracking-[.2em]">Precision nutrition</span><span className="h-1.5 w-1.5 self-center rounded-full bg-[#6bc3e4]" /><span className="mono text-[10px] uppercase tracking-[.2em]">Sustainable by design</span><span className="h-1.5 w-1.5 self-center rounded-full bg-[#6bc3e4]" /><span className="mono text-[10px] uppercase tracking-[.2em]">Soil-first science</span><span className="h-1.5 w-1.5 self-center rounded-full bg-[#6bc3e4]" /><span className="mono text-[10px] uppercase tracking-[.2em]">Precision nutrition</span></div></div>
+    <section className="container-wide py-24 md:py-32"><SectionIntro eyebrow="One field. Many futures." title="Nutrition for every decision-maker in the field." copy="From the grower holding the soil to the agronomist reading the crop, our solutions are designed around real field intelligence." /><div className="mt-14 grid gap-px border border-[#d8e0d6] bg-[#d8e0d6] sm:grid-cols-3">{['Farmers','Agronomists','Distributors'].map((item, i) => <button key={item} data-testid={`button-solution-${item.toLowerCase()}`} onClick={() => setSolution(item)} className={`group min-h-[185px] bg-[#f7f5ed] p-7 text-left transition hover:bg-[#e9f1e9] ${solution === item ? 'bg-[#e9f1e9]' : ''}`}><div className="flex justify-between"><span className="mono text-[10px] text-[#1597c6]">0{i + 1}</span><ArrowUpRight size={18} className="text-[#1597c6] transition group-hover:translate-x-1 group-hover:-translate-y-1" /></div><h3 className="serif mt-14 text-3xl text-[#173f2c]">{item}</h3><p className="mt-2 text-xs text-[#6c7a71]">{solution === item ? 'A clear path from crop need to crop response.' : 'Discover a sharper way to grow.'}</p></button>)}</div></section>
+    <section className="bg-[#173f2c] py-24 text-[#f7f5ed] md:py-32"><div className="container-wide"><SectionIntro dark eyebrow="The BIITAFERT system" title="Where science meets the soil." copy="Practical crop nutrition, backed by a deep respect for the living system beneath every harvest." /><div className="mt-16 grid items-center gap-10 md:grid-cols-[1fr_1.4fr]"><div className="grid gap-4">{[['Soil','Build the foundation.'],['Roots','Unlock the uptake.'],['Growth','Give every stage what it needs.'],['Flowering','Support the moment of potential.'],['Fruit','Strengthen the result.'],['Harvest','Bring it home.']].map(([name, copy], i) => <div key={name} className="group flex items-center gap-4 border-b border-[#41614e] pb-4"><span className="mono w-6 text-[10px] text-[#71c9e8]">0{i + 1}</span><span className="serif text-2xl">{name}</span><span className="ml-auto hidden text-xs text-[#a9c0b0] transition group-hover:block">{copy}</span><span className="h-2 w-2 rounded-full bg-[#1597c6]" /></div>)}</div><div className="relative overflow-hidden bg-[#2d6746] p-6"><img src="/images/brand/about-img-2.png" alt="Seedling growing in healthy soil" className="h-[360px] w-full object-cover mix-blend-luminosity opacity-80 md:h-[440px]" /><div className="absolute bottom-10 left-10 max-w-xs"><p className="serif text-3xl leading-tight">Growth starts below the surface.</p></div></div></div></div></section>
+    <section className="container-wide py-24 md:py-32"><SectionIntro eyebrow="The essentials" title="A catalogue built for crop confidence." copy="Explore the BIITAFERT range — reliable, water-soluble nutrition and biological solutions for the full crop cycle." /><div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{products.filter(p => p.featured).map((p, i) => <ProductCard key={p.name} product={p} index={i} />)}</div><Link href="/products" data-testid="link-full-catalogue" className="mt-10 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.17em] text-[#1597c6]">View full catalogue <ArrowUpRight size={15} /></Link></section>
+    <section className="bg-[#dbe8d8] py-24 md:py-32"><div className="container-wide grid gap-12 md:grid-cols-[1.2fr_.8fr] md:items-end"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Our promise</p><h2 className="serif mt-5 max-w-3xl text-5xl leading-[.95] tracking-[-.04em] text-[#173f2c] md:text-7xl">Progress that leaves the soil better.</h2></div><div><p className="text-sm leading-7 text-[#52645a]">We are committed to revolutionizing modern agriculture with sustainable and eco-friendly solutions — empowering farmers, enhancing productivity, and building a healthier relationship with the land.</p><Link href="/about" data-testid="link-vision" className="mt-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.17em] text-[#173f2c]">Our vision <ArrowUpRight size={15} /></Link></div></div></section>
+    <section className="container-wide grid gap-10 py-24 md:grid-cols-[.8fr_1.2fr] md:py-32"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Field notes</p><h2 className="serif mt-5 text-5xl leading-none text-[#173f2c]">A closer look at the work.</h2><Link href="/gallery" data-testid="link-gallery-home" className="mt-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.17em] text-[#1597c6]">Enter the gallery <ArrowUpRight size={15} /></Link></div><div className="grid grid-cols-2 gap-3"><img src={gallery[0]} alt="BIOBEEZ field work" className="h-52 w-full object-cover md:h-72" /><img src={gallery[4]} alt="BIOBEEZ crop field" className="mt-10 h-52 w-full object-cover md:h-72" /></div></section>
+    <section className="bg-[#eef1e9] py-24"><div className="container-wide"><div className="flex items-end justify-between gap-6"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">From the field</p><p className="serif mt-5 max-w-2xl text-4xl leading-tight text-[#173f2c]">“{testimonials[slide].quote}”</p><p className="mt-6 text-xs uppercase tracking-[.13em] text-[#6d7e73]">{testimonials[slide].by} · {testimonials[slide].place}</p></div><div className="flex gap-2"><button aria-label="Previous testimonial" data-testid="button-testimonial-prev" onClick={() => setSlide((slide + testimonials.length - 1) % testimonials.length)} className="border border-[#b3c5b6] p-3 text-[#173f2c] hover:bg-[#dbe8d8]"><ChevronLeft size={17} /></button><button aria-label="Next testimonial" data-testid="button-testimonial-next" onClick={() => setSlide((slide + 1) % testimonials.length)} className="border border-[#b3c5b6] p-3 text-[#173f2c] hover:bg-[#dbe8d8]"><ChevronRight size={17} /></button></div></div></div></section>
+    <section className="bg-[#1597c6] py-20 text-[#f7f5ed] md:py-28"><div className="container-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-end"><h2 className="serif max-w-3xl text-5xl leading-[.92] tracking-[-.04em] md:text-7xl">Let’s grow a better season.</h2><Link href="/contact" data-testid="button-home-contact" className="inline-flex items-center gap-3 bg-[#173f2c] px-6 py-4 text-xs font-bold uppercase tracking-[.14em] transition hover:bg-[#f7f5ed] hover:text-[#173f2c]">Start a conversation <ArrowUpRight size={15} /></Link></div></section>
+  </>;
 }
+
+function ProductsPage() {
+  const [search, setSearch] = useState('');
+  const [family, setFamily] = useState('All');
+  const families = ['All', ...Array.from(new Set(products.map(p => p.family)))];
+  const filtered = useMemo(() => products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) && (family === 'All' || p.family === family)), [search, family]);
+  return <><Meta title="BIITAFERT Product Catalogue" description="Explore the full BIITAFERT crop nutrition catalogue from BIOBEEZ FERTICHEM." /><section className="bg-[#173f2c] py-20 text-[#f7f5ed] md:py-28"><div className="container-wide"><p className="mono text-[10px] uppercase tracking-[.2em] text-[#71c9e8]">BIITAFERT / 2025 catalogue</p><h1 className="serif mt-5 max-w-4xl text-6xl leading-[.9] tracking-[-.04em] md:text-8xl">Feed the crop<br /><em className="text-[#71c9e8]">with intent.</em></h1><p className="mt-8 max-w-lg text-sm leading-7 text-[#b9d0c0]">The complete range of precise fertilizers and bio-solutions for modern growers. No noise. Just the right nutrition at the right stage.</p></div></section><section className="container-wide py-14 md:py-20"><div className="flex flex-col gap-4 border-b border-[#d8e0d6] pb-7 md:flex-row md:items-center md:justify-between"><label className="relative block flex-1 md:max-w-sm"><Search size={17} className="absolute left-4 top-3.5 text-[#1597c6]" /><input data-testid="input-product-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by product name" className="h-11 w-full border border-[#cbd7cc] bg-[#fbfaf5] pl-11 pr-4 text-sm outline-none focus:border-[#1597c6]" /></label><div className="flex items-center gap-2 overflow-x-auto"><Filter size={15} className="shrink-0 text-[#1597c6]" />{families.map(f => <button key={f} data-testid={`button-filter-${f.toLowerCase().replace(/\W/g, '-')}`} onClick={() => setFamily(f)} className={`whitespace-nowrap border px-4 py-2 text-[10px] font-bold uppercase tracking-[.12em] transition ${family === f ? 'border-[#173f2c] bg-[#173f2c] text-[#f7f5ed]' : 'border-[#cbd7cc] text-[#52645a] hover:border-[#1597c6]'}`}>{f}</button>)}</div></div><p data-testid="text-product-count" className="mono mt-6 text-[10px] uppercase tracking-[.15em] text-[#718177]">{filtered.length} formulations / showing full range</p>{filtered.length ? <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{filtered.map((p, i) => <ProductCard key={p.name} product={p} index={i} />)}</div> : <div data-testid="empty-products" className="py-28 text-center"><Sprout className="mx-auto text-[#1597c6]" size={38} /><p className="serif mt-5 text-3xl text-[#173f2c]">No formulation found.</p><p className="mt-2 text-sm text-[#718177]">Try a different crop need or search term.</p></div>}</section></>;
+}
+
+function AboutPage() {
+  return <><Meta title="Our Story" description="Learn about BIOBEEZ FERTICHEM, a Pune-based crop nutrition company." /><section className="container-wide grid gap-12 py-20 md:grid-cols-[1.1fr_.9fr] md:items-end md:py-28"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">About BIOBEEZ</p><h1 className="serif mt-6 text-6xl leading-[.9] tracking-[-.04em] text-[#173f2c] md:text-8xl">The future of farming is <em className="text-[#1597c6]">rooted.</em></h1></div><p className="max-w-md text-sm leading-7 text-[#52645a]">Born in Pune and built for the field, BIOBEEZ FERTICHEM is committed to revolutionizing modern agriculture with sustainable, eco-friendly solutions that help growers do more with every acre.</p></section><div className="container-wide grid gap-4 sm:grid-cols-2"><img src="/images/brand/about-img-1.png" alt="BIOBEEZ crop science laboratory" className="h-[350px] w-full object-cover md:h-[520px]" /><img src="/images/brand/about-img-2.png" alt="BIOBEEZ seedling and soil nutrition" className="mt-16 h-[350px] w-full object-cover md:mt-28 md:h-[520px]" /></div><section className="container-wide py-24 md:py-32"><SectionIntro eyebrow="How we work" title="Premium quality, without the distance." copy="Our work sits at the meeting point of rigorous crop science and local field knowledge. We listen carefully, formulate precisely and stay close to the people who use our products." /><div className="mt-14 grid gap-10 border-t border-[#d8e0d6] pt-8 md:grid-cols-3">{[['01','Premium Quality','Every formulation is developed to deliver dependable, measurable nutrition.'],['02','Sustainable Farming','We design inputs that support healthier soils and more responsible agriculture.'],['03','Global Reliability','A Pune foundation with the standards and ambition to serve growers beyond borders.']].map(([n, title, copy]) => <div key={n}><span className="mono text-[10px] text-[#1597c6]">{n}</span><h3 className="serif mt-10 text-3xl text-[#173f2c]">{title}</h3><p className="mt-4 text-sm leading-7 text-[#68786d]">{copy}</p></div>)}</div></section><section className="bg-[#dbe8d8] py-24 md:py-32"><div className="container-wide grid gap-10 md:grid-cols-[1fr_1fr]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Our vision</p><h2 className="serif mt-5 text-5xl leading-none text-[#173f2c] md:text-7xl">More life in every field.</h2></div><p className="max-w-md self-end text-sm leading-7 text-[#52645a]">We believe better agriculture is not a trade-off. It is possible to enhance crop productivity while respecting soil, water and the communities that depend on them. That belief guides every BIITAFERT solution.</p></div></section></>;
+}
+
+function GalleryPage() {
+  const [active, setActive] = useState<number | null>(null);
+  return <><Meta title="Field Gallery" description="A visual archive of BIOBEEZ FERTICHEM field work and crop science." /><section className="bg-[#dbe8d8] py-20 md:py-28"><div className="container-wide flex flex-col justify-between gap-10 md:flex-row md:items-end"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Field gallery</p><h1 className="serif mt-5 text-6xl leading-[.9] tracking-[-.04em] text-[#173f2c] md:text-8xl">The work,<br /><em>in context.</em></h1></div><p className="max-w-sm text-sm leading-7 text-[#52645a]">Every crop tells a story. Step into the fields, labs and moments behind our work.</p></div></section><section className="container-wide py-16 md:py-24"><div className="columns-1 gap-4 sm:columns-2 lg:columns-3">{gallery.map((src, i) => <button key={src} data-testid={`button-gallery-${i}`} onClick={() => setActive(i)} className="image-shine mb-4 block w-full break-inside-avoid text-left"><img src={src} alt={`BIOBEEZ field moment ${i + 1}`} className={`w-full object-cover transition duration-500 hover:scale-[1.02] ${i % 5 === 0 ? 'aspect-[4/5]' : 'aspect-[4/3]'}`} /></button>)}</div></section><AnimatePresence>{active !== null && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-[#102d20]/95 p-5" onClick={() => setActive(null)}><button aria-label="Close lightbox" data-testid="button-close-lightbox" className="absolute right-5 top-5 text-[#f7f5ed]"><X size={28} /></button><button aria-label="Previous image" data-testid="button-lightbox-prev" onClick={e => { e.stopPropagation(); setActive((active - 1 + gallery.length) % gallery.length); }} className="absolute left-3 text-[#f7f5ed] md:left-8"><ChevronLeft size={32} /></button><img src={gallery[active]} alt={`BIOBEEZ field moment ${active + 1}`} className="max-h-[85vh] max-w-[90vw] object-contain" onClick={e => e.stopPropagation()} /><button aria-label="Next image" data-testid="button-lightbox-next" onClick={e => { e.stopPropagation(); setActive((active + 1) % gallery.length); }} className="absolute right-3 text-[#f7f5ed] md:right-8"><ChevronRight size={32} /></button></motion.div>}</AnimatePresence></>;
+}
+
+function ContactPage() {
+  const [sent, setSent] = useState(false);
+  return <><Meta title="Connect With BIOBEEZ" description="Contact BIOBEEZ FERTICHEM in Pune for product and distribution enquiries." /><section className="bg-[#173f2c] py-20 text-[#f7f5ed] md:py-28"><div className="container-wide grid gap-12 md:grid-cols-[1.1fr_.9fr] md:items-end"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#71c9e8]">Let’s talk crops</p><h1 className="serif mt-5 text-6xl leading-[.9] tracking-[-.04em] md:text-8xl">Good work<br /><em className="text-[#71c9e8]">starts here.</em></h1></div><p className="max-w-md text-sm leading-7 text-[#b9d0c0]">Looking for the right formulation, a distribution partnership or field guidance? Tell us what you are growing.</p></div></section><section className="container-wide grid gap-14 py-20 md:grid-cols-[.75fr_1.25fr] md:py-28"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Contact details</p><div className="mt-8 grid gap-7"><a data-testid="contact-phone" href="tel:+917620592109" className="flex gap-4"><Phone className="mt-1 text-[#1597c6]" size={19} /><span><strong className="block text-sm text-[#173f2c]">+91 76205 92109</strong><span className="mt-1 block text-xs text-[#718177]">Call our team</span></span></a><a data-testid="contact-email" href="mailto:biobeezfertichem7@gmail.com" className="flex gap-4"><Mail className="mt-1 text-[#1597c6]" size={19} /><span><strong className="block text-sm text-[#173f2c]">biobeezfertichem7@gmail.com</strong><span className="mt-1 block text-xs text-[#718177]">Write to us</span></span></a><div className="flex gap-4"><MapPin className="mt-1 text-[#1597c6]" size={19} /><span><strong className="block text-sm text-[#173f2c]">Fursungi, Pune</strong><span className="mt-1 block text-xs text-[#718177]">Maharashtra 412308, India</span></span></div></div><div className="mt-12 overflow-hidden border border-[#d8e0d6]"><iframe title="BIOBEEZ FERTICHEM location map" src="https://www.google.com/maps?q=Fursungi%2C%20Pune%2C%20Maharashtra%20412308&output=embed" className="h-56 w-full border-0 grayscale" loading="lazy" /></div></div><div className="border-t border-[#d8e0d6] pt-7 md:border-t-0 md:pt-0"><p className="mono text-[10px] uppercase tracking-[.2em] text-[#1597c6]">Send an enquiry</p>{sent ? <div data-testid="status-contact-success" className="mt-10 border border-[#9ac8a5] bg-[#e8f3e5] p-8"><ShieldCheck className="text-[#1597c6]" size={30} /><h2 className="serif mt-5 text-3xl text-[#173f2c]">Message received.</h2><p className="mt-2 text-sm leading-6 text-[#52645a]">Our team will get back to you shortly. Thank you for reaching out.</p><button data-testid="button-contact-reset" onClick={() => setSent(false)} className="mt-7 text-xs font-bold uppercase tracking-[.15em] text-[#1597c6]">Send another message</button></div> : <form data-testid="form-contact" onSubmit={e => { e.preventDefault(); setSent(true); }} className="mt-8 grid gap-5"><label className="grid gap-2 text-xs font-bold uppercase tracking-[.12em] text-[#52645a]">Name<input data-testid="input-contact-name" required name="name" className="h-12 border border-[#cbd7cc] bg-[#fbfaf5] px-4 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#1597c6]" /></label><label className="grid gap-2 text-xs font-bold uppercase tracking-[.12em] text-[#52645a]">Email<input data-testid="input-contact-email" required type="email" name="email" className="h-12 border border-[#cbd7cc] bg-[#fbfaf5] px-4 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#1597c6]" /></label><label className="grid gap-2 text-xs font-bold uppercase tracking-[.12em] text-[#52645a]">I’m a...<select data-testid="select-contact-role" name="role" className="h-12 border border-[#cbd7cc] bg-[#fbfaf5] px-4 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#1597c6]"><option>Farmer / grower</option><option>Agronomist</option><option>Distributor</option><option>Other</option></select></label><label className="grid gap-2 text-xs font-bold uppercase tracking-[.12em] text-[#52645a]">Message<textarea data-testid="textarea-contact-message" required name="message" rows={4} className="border border-[#cbd7cc] bg-[#fbfaf5] p-4 text-sm font-normal normal-case tracking-normal outline-none focus:border-[#1597c6]" /></label><button data-testid="button-contact-submit" type="submit" className="inline-flex h-13 items-center justify-center gap-3 bg-[#1597c6] px-6 text-xs font-bold uppercase tracking-[.15em] text-[#f7f5ed] transition hover:bg-[#173f2c]">Send enquiry <ArrowUpRight size={15} /></button></form>}</div></section></>;
+}
+
+function NotFound() { return <div className="container-wide py-32 text-center"><Leaf className="mx-auto text-[#1597c6]" size={38} /><h1 className="serif mt-6 text-6xl text-[#173f2c]">This field is fallow.</h1><Link href="/" data-testid="link-back-home" className="mt-8 inline-flex text-xs font-bold uppercase tracking-[.16em] text-[#1597c6]">Back home <ArrowUpRight size={15} /></Link></div>; }
 
 function Router() {
-  return (
-    // Keep a shared shell (sidebar, navbar) outside the boundary so it
-    // survives a page crash.
-    <RoutedErrorBoundary>
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route component={NotFound} />
-      </Switch>
-    </RoutedErrorBoundary>
-  );
-}
-
-function RoutedErrorBoundary({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
+  return <ErrorBoundary resetKey={location}><Shell><Switch><Route path="/" component={Home} /><Route path="/products" component={ProductsPage} /><Route path="/about" component={AboutPage} /><Route path="/gallery" component={GalleryPage} /><Route path="/contact" component={ContactPage} /><Route component={NotFound} /></Switch></Shell></ErrorBoundary>;
 }
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={queryClient}><TooltipProvider><Router /><Toaster /></TooltipProvider></QueryClientProvider>;
 }
 
 export default App;
