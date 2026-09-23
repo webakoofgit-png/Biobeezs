@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -8,7 +7,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Filter, Leaf, Mail, MapPin, Menu, Phone, Search, ShieldCheck, Sprout, X } from 'lucide-react';
 import { products, type Product } from '@/data/products';
 
-const queryClient = new QueryClient();
 const gallery = Array.from({ length: 27 }, (_, i) => `/images/gallery/photo-gallery-${['1751352123-6863833b6b8e2','1751352210-68638392ac156','1751352252-686383bc3dc91','1751352278-686383d64fd1d','1751353281-686387c168956','1751353298-686387d234801','1751353309-686387dd23d9a','1751353324-686387ec71b87','1751353336-686387f8dff3f','1751353368-68638818a005d','1751353377-6863882133b1b','1751353386-6863882a53326','1751353396-686388345d5db','1751353433-6863885967b2c','1751353442-68638862b5dbc','1751353452-6863886c703a4','1751353465-6863887913189','1751353500-6863889c28e79','1751353510-686388a652609','1751353542-686388c63a80e','1751353553-686388d1ca71e','1751353562-686388da6d9f3','1751353572-686388e4dd995','1751353581-686388edc6e3a','1751353590-686388f6ae84e','1751353629-6863891dc792e','1751353650-68638932e07da'][i]}.jpg`);
 
 function Meta({ title, description }: { title: string; description: string }) {
@@ -123,7 +121,7 @@ function Router() {
 }
 
 function App() {
-  return <QueryClientProvider client={queryClient}><TooltipProvider><Router /><Toaster /></TooltipProvider></QueryClientProvider>;
+  return <TooltipProvider><Router /><Toaster /></TooltipProvider>;
 }
 
 export default App;
